@@ -4,6 +4,11 @@
 
 This project aims to scrape data from a website (e.g., Unsplash) using its API, process the retrieved information, and store it in a structured format, potentially utilizing a database for efficient management and retrieval.
 
+## Coding Standards
+
+Create Functions/Classes for scraping, saving information, etc
+
+
 ## Components:
 
 1. **Web Scraping Module**: This module will handle the interaction with the website's API to fetch data. It will include functions to make API requests, parse the responses, and extract relevant information.
