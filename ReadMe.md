@@ -69,26 +69,3 @@ Create Functions/Classes for scraping, saving information, etc
 3. **Storing Data**: Save the processed data using the functions from the Data Storage Module. Choose the appropriate format based on requirements.
 
 4. **Database Management** (Optional): If using a database, use the Database Management Module to create tables, insert data, and perform other database operations.
-
-## Example Workflow:
-
-```python
-# Import necessary modules
-from web_scraping_module import fetch_data, parse_response
-from data_processing_module import clean_data, extract_features
-from data_storage_module import save_to_csv
-
-# Step 1: Scraping data
-api_endpoint = "https://api.unsplash.com/photos"
-parameters = {"query": "nature", "per_page": 10}  # Example parameters
-response = fetch_data(api_endpoint, parameters)
-
-# Step 2: Parsing response
-data = parse_response(response)
-
-# Step 3: Processing data
-cleaned_data = clean_data(data)
-features = extract_features(cleaned_data)
-
-# Step 4: Storing data
-save_to_csv(features, "nature_photos.csv")# pythonScrpBot

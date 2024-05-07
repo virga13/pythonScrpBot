@@ -14,9 +14,11 @@ def save_image(image_response, category, page, i):
     return filename
 
 def fetch_and_save_image(pageNumber, searchQuery):
-    filenames = []
+    filenames = {}
+    ids = []
     searchQuery = "enduro+mountain+bike"
-    for page in range(1, pageNumber + 1):
+    
+    for page in range(1, pageNumber - 15):
         url = f'https://unsplash.com/napi/search/photos?page={page}&per_page=10&query={searchQuery}&xp=semantic-search%3Aexperiment'
         response = requests.get(url)
 
@@ -27,16 +29,25 @@ def fetch_and_save_image(pageNumber, searchQuery):
                 image_response = requests.get(image_url)
                 if image_response.status_code == 200:
                     image_description = result['alt_description']
-                    category = 'MTB' if 'mountain' in image_description else 'Cycling'
-                    filename = save_image(image_response, category, page, i)
-                    filenames.append(filename)
+                    description = 'MTB' if 'mountain' in image_description else 'Cycling'
+                    image_id = result['id']
+                    filename = save_image(image_response, description, page, i)
+                    filenames[image_id] = filename
+                    ids.append(image_id)
+
+    with open('image_ids.txt', 'w') as f:
+        for image_id in ids:
+            f.write(f'{image_id}\n')
+
     return filenames
 
-def display_images(filenames):
-    for filename in filenames:
+def display_image_by_id(image_id, filenames):
+    filename = filenames.get(image_id)
+    if filename:
         img = Image.open(filename)
         plt.imshow(img)
         plt.show()
 
-filenames = fetch_and_save_image(23, "enduro+mountain+bike")
-display_images(filenames)
+fetch_and_save_image(23, "downhill")
+
+# display_image_by_id('9c1YBlGVhLk',filenames)
