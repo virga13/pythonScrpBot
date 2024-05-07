@@ -1,53 +1,62 @@
 import os
-import matplotlib.pyplot as plt
-from PIL import Image
 import requests
 import json
+import logging
 
-def save_image(image_response, category, page, i):
-    if not os.path.exists(category):
-        os.makedirs(category)
-    filename = f'{category}/image_{page}_{i}.jpg'
-    with open(filename, 'wb') as f:
-        f.write(image_response.content)
-    print(f'Image {page}_{i} successfully downloaded.')
-    return filename
+class ImageFetcher:
+    def __init__(self, base_url, search_query):
+        self.base_url = base_url
+        self.search_query = search_query
 
-def fetch_and_save_image(pageNumber, searchQuery):
-    filenames = {}
-    ids = []
-    searchQuery = "enduro+mountain+bike"
-    
-    for page in range(1, pageNumber - 15):
-        url = f'https://unsplash.com/napi/search/photos?page={page}&per_page=10&query={searchQuery}&xp=semantic-search%3Aexperiment'
-        response = requests.get(url)
+    def fetch_images(self, page_number):
+        for page in range(1, page_number + 1):
+            url = self.build_url(page)
+            response = requests.get(url)
+            if response.status_code == 200:
+                data = json.loads(response.text)
+                for i, result in enumerate(data['results']):
+                    image = self.parse_image(result)
+                    if image:
+                        yield image
 
-        if response.status_code == 200:
-            data = json.loads(response.text)
-            for i, result in enumerate(data['results']):
-                image_url = result['urls']['small']
-                image_response = requests.get(image_url)
-                if image_response.status_code == 200:
-                    image_description = result['alt_description']
-                    description = 'MTB' if 'mountain' in image_description else 'Cycling'
-                    image_id = result['id']
-                    filename = save_image(image_response, description, page, i)
-                    filenames[image_id] = filename
-                    ids.append(image_id)
+    def build_url(self, page):
+        return f'{self.base_url}/napi/search/photos?page={page}&per_page=10&query={self.search_query}&xp=semantic-search%3Aexperiment'
+                  
+    def parse_image(self, result):
+        image_url = result['urls']['small']
+        image_response = requests.get(image_url)
+        if image_response.status_code == 200:
+            image_description = result['alt_description']
+            if image_description is not None:
+                  description = 'MTB' if 'mountain' in image_description else 'Cycling'
+            else:
+                description = "null"   
+            image_id = result['id']
+            return image_id, description, image_response
+        else:
+            logging.error(f"Failed to fetch image: {image_response.status_code}")
+            return None
 
-    with open('image_ids.txt', 'w') as f:
-        for image_id in ids:
-            f.write(f'{image_id}\n')
+class ImageSaver:
+    def __init__(self):
+        self.filenames = {}
 
-    return filenames
+    def save_image(self, image_response, description, page, i):
+        if not os.path.exists(description):
+            os.makedirs(description)
+        filename = f'{description}/image_{page}_{i}.jpg'
+        with open(filename, 'wb') as f:
+            f.write(image_response.content)
+        print(f'Image {page}_{i} successfully downloaded.')
+        return filename
 
-def display_image_by_id(image_id, filenames):
-    filename = filenames.get(image_id)
-    if filename:
-        img = Image.open(filename)
-        plt.imshow(img)
-        plt.show()
+    def save_images(self, images, page):
+        for i, (image_id, description, image_response) in enumerate(images):
+            filename = self.save_image(image_response, description, page, i)
+            self.filenames[image_id] = filename
 
-fetch_and_save_image(23, "downhill")
+fetcher = ImageFetcher("https://unsplash.com", "enduro+mountain+bike")
+saver = ImageSaver()
 
-# display_image_by_id('9c1YBlGVhLk',filenames)
+images = fetcher.fetch_images(50)
+saver.save_images(images, 1)
