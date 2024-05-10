@@ -38,10 +38,10 @@ class ImageFetcher:
             return None
 
 class ImageSaver:
-    def __init__(self):
-        self.filenames = {}
+    filenames = {}
 
-    def save_image(self, image_response, description, page, i):
+    @staticmethod
+    def save_image(image_response, description, page, i):
         if not os.path.exists(description):
             os.makedirs(description)
         filename = f'{description}/image_{page}_{i}.jpg'
@@ -50,13 +50,15 @@ class ImageSaver:
         print(f'Image {page}_{i} successfully downloaded.')
         return filename
 
-    def save_images(self, images, page):
+    @classmethod
+    def save_images(cls, images, page):
         for i, (image_id, description, image_response) in enumerate(images):
-            filename = self.save_image(image_response, description, page, i)
-            self.filenames[image_id] = filename
+            filename = cls.save_image(image_response, description, page, i)
+            cls.filenames[image_id] = filename
 
 fetcher = ImageFetcher("https://unsplash.com", "enduro+mountain+bike")
-saver = ImageSaver()
+fetcher2 = ImageFetcher("https://unsplash.com", "mountain+bike")
 
 images = fetcher.fetch_images(50)
-saver.save_images(images, 1)
+images2 = fetcher2.fetch_images(40)
+ImageSaver.save_images(images, 1)
